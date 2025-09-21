@@ -1,0 +1,40 @@
+import pandas as pd
+from sqlalchemy import create_engine
+from sqlalchemy.exc import SQLAlchemyError
+
+def csv_to_sqlserver(csv_path, server, database, table_name):
+    try:
+        # 📌 CSV faylını oxu
+        df = pd.read_csv(csv_path)
+        print("✅ CSV faylı uğurla oxundu.")
+
+        # 🔹 Windows Authentication üçün connection string
+        connection_string = (
+            f"mssql+pyodbc://{server}/{database}"
+            "?driver=ODBC+Driver+17+for+SQL+Server&trusted_connection=yes"
+        )
+
+        # 📌 Engine yarat
+        engine = create_engine(connection_string)
+        print("🔗 SQL Server-ə bağlantı quruldu.")
+
+        # 📌 DataFrame-i MSSQL-ə yaz
+        df.to_sql(table_name, con=engine, if_exists="append", index=False)
+        print("✅ CSV məlumatları MSSQL-ə uğurla əlavə olundu!")
+
+    except FileNotFoundError:
+        print("❌ CSV faylı tapılmadı. Zəhmət olmasa yolun düzgünlüyünü yoxlayın.")
+    except pd.errors.ParserError:
+        print("❌ CSV faylında sintaksis xətası var. Faylı yoxlayın.")
+    except SQLAlchemyError as e:
+        print(f"❌ SQL Server bağlantısı və ya yazma zamanı xəta baş verdi:\n{e}")
+    except Exception as e:
+        print(f"❌ Gözlənilməz xəta baş verdi:\n{e}")
+
+# 📌 Funksiyanı çağır
+csv_to_sqlserver(
+    csv_path=r"C:\Users\Администратор\Desktop\python\RASS\ProductBonus.csv",
+    server="localhost\\SQLEXPRESS",
+    database="AdventureWorks2022",
+    table_name="my_table"
+)
